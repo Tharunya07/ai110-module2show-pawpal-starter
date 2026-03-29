@@ -50,3 +50,18 @@ The scheduler goes beyond a simple priority queue:
 - **Recurring tasks** — each task can be marked `"daily"` (always included) or `"weekly"` (included only if 7 or more days have passed since it was last scheduled). Non-recurring tasks are always considered.
 - **Task filtering** — `filter_tasks()` returns a subset of the task list by pet name, completion status, or both, without modifying the original list.
 - **Conflict detection** — `validate()` checks for duplicate tasks (same name and pet) and flags if the total task time exceeds the owner's daily budget, before scheduling runs.
+
+## Testing PawPal+
+
+```bash
+python -m pytest tests/test_pawpal.py -v
+```
+
+9 tests cover: time budget validation, priority ordering, duration tiebreaking within the same priority tier, pet with no tasks, budget overflow handling, weekly recurrence exclusion, duplicate conflict detection, task completion, and task addition to a pet.
+
+```
+Confidence Level: ⭐⭐⭐⭐ (4/5)
+The core scheduling logic is well tested. Edge cases around recurrence
+and conflict detection are covered. Untested areas: multi-day planning,
+preference-based filtering, and UI interaction flows.
+```
