@@ -5,6 +5,11 @@
 **a. Initial design**
 
 - Briefly describe your initial UML design.
+- A: I started with three core classes: Pet (stores name, species, age), Task (stores what needs to be done, how long it takes, and how urgent it is), and Scheduler (takes the task list and time budget and figures out what fits in the day). The idea was to keep data separate from logic that the Pet and Task just hold info, Scheduler does the thinking.
+The three core actions a user can perform:
+1. Add a pet: enter name, type, and basic info.
+2. Add care tasks: add tasks like "morning walk" with duration and priority.
+3. Generate a daily plan: app schedules tasks based on time available and priority.
 - What classes did you include, and what responsibilities did you assign to each?
 
 **b. Design changes**
