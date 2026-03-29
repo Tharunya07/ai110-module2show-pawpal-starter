@@ -41,3 +41,12 @@ pip install -r requirements.txt
 5. Add tests to verify key behaviors.
 6. Connect your logic to the Streamlit UI in `app.py`.
 7. Refine UML so it matches what you actually built.
+
+## Smarter Scheduling
+
+The scheduler goes beyond a simple priority queue:
+
+- **Priority + duration sorting** — tasks are sorted by priority first (HIGH before MEDIUM before LOW), then by shortest duration within the same priority tier, so the most important and most efficient tasks fill the budget first.
+- **Recurring tasks** — each task can be marked `"daily"` (always included) or `"weekly"` (included only if 7 or more days have passed since it was last scheduled). Non-recurring tasks are always considered.
+- **Task filtering** — `filter_tasks()` returns a subset of the task list by pet name, completion status, or both, without modifying the original list.
+- **Conflict detection** — `validate()` checks for duplicate tasks (same name and pet) and flags if the total task time exceeds the owner's daily budget, before scheduling runs.

@@ -28,12 +28,16 @@ A: Yes. After AI review, I made two changes. First, changed Owner.pet to pets: L
 **a. Constraints and priorities**
 
 - What constraints does your scheduler consider (for example: time, priority, preferences)?
+- A: The scheduler considers two main constraints i.e available time per day (the owner's total minute budget) and task priority (HIGH, MEDIUM, LOW). It also considers recurrence status, meaning a task only enters the plan if it is actually due today based on its daily or weekly schedule.
 - How did you decide which constraints mattered most?
+- A: Time budget and priority were the obvious starting point was without those two, the scheduler has no way to make decisions. Recurrence came later when I realized marking a weekly grooming task the same way as a daily feeding task made no sense. Preferences stayed as a placeholder because the app scope did not need it yet.
 
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
+- A: The scheduler uses a greedy approach. It picks tasks one by one in priority and duration order and stops when time runs out. It never backtracks to check if skipping a long task would free up space for two shorter ones.
 - Why is that tradeoff reasonable for this scenario?
+- A: For a daily pet care app with a small task list, greedy is good enough. Owners care more about high priority tasks being done first than squeezing the maximum number of tasks into a day. A backtracking algorithm would add complexity with no real benefit for this use case.
 
 ---
 
