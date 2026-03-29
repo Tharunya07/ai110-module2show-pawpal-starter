@@ -3,20 +3,24 @@
 ## 1. System Design
 
 **a. Initial design**
-
 - Briefly describe your initial UML design.
 - A: I started with three core classes: Pet (stores name, species, age), Task (stores what needs to be done, how long it takes, and how urgent it is), and Scheduler (takes the task list and time budget and figures out what fits in the day). The idea was to keep data separate from logic that the Pet and Task just hold info, Scheduler does the thinking.
 The three core actions a user can perform:
 1. Add a pet: enter name, type, and basic info.
 2. Add care tasks: add tasks like "morning walk" with duration and priority.
 3. Generate a daily plan: app schedules tasks based on time available and priority.
+I mapped this in a mermaid diagram.
+
 - What classes did you include, and what responsibilities did you assign to each?
+- A:  Pet stores the animal's basic info (name, species, age, notes). Task stores what needs to be done, how long it takes, its priority, and whether it is done. Owner stores the person's name, available time per day, and preferences. Scheduler is responsible for taking the task list, fitting tasks within the time budget, sorting by priority, and explaining why each task was included or skipped.
 
 **b. Design changes**
 
 - Did your design change during implementation?
-- If yes, describe at least one change and why you made it.
+A: Yes, after running the skeleton through Claude for a review, several structural issues came up that needed fixing before writing any real logic. Claude helped me understand the missing relationships and logic bottlenecks.
 
+- If yes, describe at least one change and why you made it.
+A: Yes. After AI review, I made two changes. First, changed Owner.pet to pets: List[Pet] so the app can support more than one pet. Second, replaced priority: str in Task with an enum (HIGH, MEDIUM, LOW) so sorting in generate_plan is reliable and not based on raw string comparison.
 ---
 
 ## 2. Scheduling Logic and Tradeoffs
