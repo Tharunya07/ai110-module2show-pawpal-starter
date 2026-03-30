@@ -70,18 +70,19 @@ else:
         duration = st.number_input("Duration (minutes)", min_value=1, max_value=240, value=30)
         priority_choice = st.selectbox("Priority", ["HIGH", "MEDIUM", "LOW"])
         category = st.text_input("Category", value="Exercise")
+        recurrence_choice = st.selectbox("Recurrence", ["none", "daily", "weekly"])
 
         task_submitted = st.form_submit_button("Add Task")
 
     if task_submitted:
         selected_pet = pet_map[pet_choice]
-        priority = Priority[priority_choice]
         task = Task(
             name=task_name,
             duration=int(duration),
-            priority=priority,
+            priority=Priority[priority_choice],
             category=category,
             pet=selected_pet,
+            recurrence=None if recurrence_choice == "none" else recurrence_choice,
         )
         scheduler.add_task(task)
         selected_pet.tasks.append(task)
@@ -91,19 +92,72 @@ else:
 
     if st.session_state.tasks:
         st.markdown("**Current task list:**")
-        for t in st.session_state.tasks:
-            st.markdown(
-                f"- **{t.name}** — {t.pet.name} | {t.priority.value.upper()} | {t.duration} min | _{t.category}_"
-            )
+        st.dataframe(
+            [
+                {
+                    "Task": t.name,
+                    "Pet": t.pet.name,
+                    "Priority": t.priority.value.upper(),
+                    "Duration (min)": t.duration,
+                    "Category": t.category,
+                    "Recurring": t.recurrence or "—",
+                }
+                for t in st.session_state.tasks
+            ],
+            use_container_width=True,
+        )
     else:
         st.info("No tasks added yet.")
 
 st.divider()
 
 # ─────────────────────────────────────────────
-# SECTION 3 — Generate Plan
+# SECTION 3 — Filter Tasks
 # ─────────────────────────────────────────────
-st.subheader("3. Generate Today's Plan")
+st.subheader("3. Filter Tasks")
+
+if st.session_state.owner is None:
+    st.warning("Complete Section 1 first to set up an owner and pet.")
+elif not st.session_state.tasks:
+    st.info("Add tasks in Section 2 to use filters.")
+else:
+    owner = st.session_state.owner
+    scheduler = st.session_state.scheduler
+    pet_names = ["All Pets"] + [p.name for p in owner.pets]
+
+    col1, col2 = st.columns(2)
+    with col1:
+        filter_pet = st.selectbox("Filter by pet", pet_names)
+    with col2:
+        incomplete_only = st.checkbox("Show incomplete tasks only")
+
+    pet_name_arg = None if filter_pet == "All Pets" else filter_pet
+    filtered = scheduler.filter_tasks(pet_name=pet_name_arg, incomplete_only=incomplete_only)
+
+    if filtered:
+        st.dataframe(
+            [
+                {
+                    "Task": t.name,
+                    "Pet": t.pet.name,
+                    "Priority": t.priority.value.upper(),
+                    "Duration (min)": t.duration,
+                    "Completed": t.completed,
+                    "Recurring": t.recurrence or "—",
+                }
+                for t in filtered
+            ],
+            use_container_width=True,
+        )
+    else:
+        st.info("No tasks match the current filters.")
+
+st.divider()
+
+# ─────────────────────────────────────────────
+# SECTION 4 — Generate Plan
+# ─────────────────────────────────────────────
+st.subheader("4. Generate Today's Plan")
 
 if st.session_state.owner is None:
     st.warning("Complete Section 1 first to set up an owner and pet.")
@@ -112,19 +166,63 @@ elif not st.session_state.tasks:
 else:
     if st.button("Generate Today's Plan"):
         scheduler = st.session_state.scheduler
+        owner = st.session_state.owner
+
+        # Conflict warnings
+        warnings = scheduler.validate()
+        for w in warnings:
+            st.warning(f"Conflict Detected: {w}")
+
+        # Generate plan (runs regardless of warnings)
         plan = scheduler.generate_plan()
+        all_due = [t for t in scheduler.task_list if t.is_due(__import__("datetime").date.today())]
+        skipped = [t for t in all_due if t not in plan]
 
         if not plan:
-            st.error("No tasks fit within the available time budget.")
+            st.error("No tasks fit within the available time budget. Try reducing task durations or increasing available time.")
         else:
-            st.markdown("### Scheduled Tasks")
-            for i, task in enumerate(plan, start=1):
-                st.markdown(
-                    f"**{i}. {task.name}**  \n"
-                    f"Pet: {task.pet.name} &nbsp;|&nbsp; "
-                    f"Priority: {task.priority.value.upper()} &nbsp;|&nbsp; "
-                    f"Duration: {task.duration} min"
+            if not warnings:
+                st.success("Plan generated with no conflicts.")
+
+            # Summary metrics
+            time_used = sum(t.duration for t in plan)
+            time_budget = owner.get_available_time()
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Tasks Scheduled", len(plan))
+            col2.metric("Time Used (min)", time_used)
+            col3.metric("Time Remaining (min)", time_budget - time_used)
+
+            # Scheduled tasks table
+            st.markdown("#### Scheduled Tasks")
+            st.table(
+                [
+                    {
+                        "Task": t.name,
+                        "Pet": t.pet.name,
+                        "Priority": t.priority.value.upper(),
+                        "Duration (min)": t.duration,
+                        "Recurring": t.recurrence or "—",
+                    }
+                    for t in plan
+                ]
+            )
+
+            # Skipped tasks table
+            if skipped:
+                st.markdown("#### Skipped Tasks")
+                st.table(
+                    [
+                        {
+                            "Task": t.name,
+                            "Pet": t.pet.name,
+                            "Priority": t.priority.value.upper(),
+                            "Duration (min)": t.duration,
+                            "Reason": "Time ran out",
+                        }
+                        for t in skipped
+                    ]
                 )
 
-            st.markdown("### Plan Reasoning")
-            st.text(scheduler.explain_plan())
+            # Full reasoning
+            with st.expander("Plan reasoning"):
+                st.text(scheduler.explain_plan())

@@ -1,30 +1,19 @@
-# PawPal+ (Module 2 Project)
+# PawPal+
 
-You are building **PawPal+**, a Streamlit app that helps a pet owner plan care tasks for their pet.
+PawPal+ is a Streamlit app that helps pet owners plan daily care tasks for their pets.
+It schedules tasks based on priority and available time, supports recurring tasks, and
+explains what was scheduled and what was skipped.
 
-## Scenario
+## Features
 
-A busy pet owner needs help staying consistent with pet care. They want an assistant that can:
+- **Priority-based scheduling** — tasks are scheduled HIGH before MEDIUM before LOW
+- **Duration tiebreaking** — within the same priority tier, shorter tasks are scheduled first to fit the most into the available budget
+- **Recurring tasks** — tasks can be marked `daily` (always included) or `weekly` (included only when 7+ days have passed since last scheduled), using `is_due()` logic
+- **Task filtering** — filter the task list by pet name, completion status, or both via `filter_tasks()`
+- **Conflict detection** — `validate()` flags duplicate tasks and warns when total task time exceeds the owner's daily budget, before the plan runs
+- **Plan reasoning** — `explain_plan()` lists every scheduled task with its priority and duration, and reports which tasks were skipped and why
 
-- Track pet care tasks (walks, feeding, meds, enrichment, grooming, etc.)
-- Consider constraints (time available, priority, owner preferences)
-- Produce a daily plan and explain why it chose that plan
-
-Your job is to design the system first (UML), then implement the logic in Python, then connect it to the Streamlit UI.
-
-## What you will build
-
-Your final app should:
-
-- Let a user enter basic owner + pet info
-- Let a user add/edit tasks (duration + priority at minimum)
-- Generate a daily schedule/plan based on constraints and priorities
-- Display the plan clearly (and ideally explain the reasoning)
-- Include tests for the most important scheduling behaviors
-
-## Getting started
-
-### Setup
+## Setup
 
 ```bash
 python -m venv .venv
@@ -32,15 +21,11 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### Suggested workflow
+Run the app:
 
-1. Read the scenario carefully and identify requirements and edge cases.
-2. Draft a UML diagram (classes, attributes, methods, relationships).
-3. Convert UML into Python class stubs (no logic yet).
-4. Implement scheduling logic in small increments.
-5. Add tests to verify key behaviors.
-6. Connect your logic to the Streamlit UI in `app.py`.
-7. Refine UML so it matches what you actually built.
+```bash
+streamlit run app.py
+```
 
 ## Smarter Scheduling
 
@@ -65,3 +50,9 @@ The core scheduling logic is well tested. Edge cases around recurrence
 and conflict detection are covered. Untested areas: multi-day planning,
 preference-based filtering, and UI interaction flows.
 ```
+
+## Demo
+
+<a href="Images/demo.png" target="_blank">
+  <img src="Images/demo.png" alt="PawPal+ Demo" width="700"/>
+</a>

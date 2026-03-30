@@ -46,12 +46,16 @@ A: Yes. After AI review, I made two changes. First, changed Owner.pet to pets: L
 **a. How you used AI**
 
 - How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
+- A:  I used AI across every phase, starting with design brainstorming to identify missing relationships in my class skeletons, then for implementing method bodies, adding algorithms like recurring task logic and conflict detection, generating test cases, and cleaning up docstrings. I also used it to review my own code before moving to the next phase rather than waiting until something broke.
 - What kinds of prompts or questions were most helpful?
+- A: The most useful prompts were specific and constrained telling AI exactly what to implement, what not to touch, and what format to return. Open-ended prompts like "improve my code" were less useful than "add filter_tasks() to Scheduler, read-only, these two parameters, return a list." Asking for feedback before writing code also saved a lot of rework.
 
 **b. Judgment and verification**
 
 - Describe one moment where you did not accept an AI suggestion as-is.
+- A: In Phase 3, AI suggested replacing the scheduling loop with a walrus operator list comprehension to make it more "Pythonic." I rejected it. It relied on side effects inside a comprehension which Python style guides explicitly discourage, it would have broken task.last_scheduled which recurring tasks depend on, and it would have been harder to debug. The explicit for loop was cleaner for this use case.
 - How did you evaluate or verify what the AI suggested?
+- A: I read the suggestion against what the method was actually supposed to do. The walrus version looked clever but skipped a required side effect. I also ran main.py after every change to verify terminal output matched expected behavior before moving on.
 
 ---
 
@@ -60,12 +64,16 @@ A: Yes. After AI review, I made two changes. First, changed Owner.pet to pets: L
 **a. What you tested**
 
 - What behaviors did you test?
+- A:  Nine behaviors total, task completion status flipping correctly, task addition increasing pet task count, scheduled tasks fitting within budget, priority ordering being respected, duration tiebreaking within same priority, pet with no tasks returning empty list without crashing, budget overflow handling at least one task, weekly recurrence exclusion when not due, and duplicate detection in validate().
 - Why were these tests important?
+- A: The scheduler makes decisions automatically so bugs would be silent, a wrong sort order or a missed recurrence check would not crash anything, it would just produce a wrong plan. Tests made those invisible failures visible before they reached the UI.
 
 **b. Confidence**
 
 - How confident are you that your scheduler works correctly?
+- A: 4 out of 5. The core scheduling logic is solid and all edge cases around priority, duration, recurrence, and conflict detection are covered. The gap is around filter_tasks() combinations, explain_plan() output content, and anything involving the UI directly, those are untested.
 - What edge cases would you test next if you had more time?
+- A: Filter combinations (pet name + incomplete only together), daily recurrence specifically, explain_plan() output format, and what happens when an owner has no pets at all.
 
 ---
 
@@ -74,11 +82,14 @@ A: Yes. After AI review, I made two changes. First, changed Owner.pet to pets: L
 **a. What went well**
 
 - What part of this project are you most satisfied with?
+- A: The recurring task logic. Adding is_due() as a clean pre-filter inside generate_plan() without breaking the existing dataclass structure was a good design call. It meant the scheduler got smarter without the rest of the system changing.
 
 **b. What you would improve**
 
 - If you had another iteration, what would you improve or redesign?
+- A: Owner.preferences. It exists as a List[str] but does nothing, it was flagged as a gap in Phase 1 and never got wired into scheduling logic. I would either define what it controls (preferred categories, time of day) and actually use it in generate_plan(), or remove it entirely. Dead attributes in a design are just noise.
 
 **c. Key takeaway**
 
 - What is one important thing you learned about designing systems or working with AI on this project?
+- A: AI is fast at generating code but it does not know what you are building. The most useful thing I did was give AI a constrained problem with clear inputs and outputs instead of asking it to figure out the design. The human job is staying the architect everytime : deciding what gets built, what gets skipped, and what gets rejected even when the suggestion looks clever.
