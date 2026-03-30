@@ -127,6 +127,24 @@ for task in [morning_walk, dog_feeding, dog_feeding_duplicate, cat_feeding,
     scheduler.task_list.append(task)
 
 # ─────────────────────────────────────────────
+# WEIGHTED SCORES
+# ─────────────────────────────────────────────
+print("=" * 55)
+print("            WEIGHTED PRIORITY SCORES")
+print("=" * 55)
+for task in scheduler.task_list:
+    print(f"  {task.name} ({task.pet.name}) — score: {task.calculate_score()}"
+          f"  [{task.priority.value.upper()}"
+          f"{', ' + task.recurrence if task.recurrence else ''}]")
+print()
+
+# Score comparison: HIGH daily vs MEDIUM weekly
+print(f"  Thyroid Medication (HIGH, daily):      {cat_medication.calculate_score()}")
+print(f"  Brushing & Grooming (MEDIUM, weekly):  {dog_grooming.calculate_score()}")
+print(f"  HIGH daily scores higher: {cat_medication.calculate_score() > dog_grooming.calculate_score()}")
+print()
+
+# ─────────────────────────────────────────────
 # VALIDATE — run before generate_plan()
 # ─────────────────────────────────────────────
 warnings = scheduler.validate()

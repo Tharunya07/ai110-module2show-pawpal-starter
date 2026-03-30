@@ -132,6 +132,14 @@ def test_weekly_task_not_due_is_excluded():
     assert not_due not in plan
 
 
+def test_calculate_score_high_daily_beats_low_non_recurring():
+    pet = make_pet()
+    high_daily = Task(name="Medication", duration=5, priority=Priority.HIGH, category="Medical", pet=pet, recurrence="daily")
+    low_none   = Task(name="Bath",       duration=30, priority=Priority.LOW,  category="Grooming", pet=pet)
+
+    assert high_daily.calculate_score() > low_none.calculate_score()
+
+
 def test_validate_flags_duplicate_task():
     pet = make_pet()
     owner = make_owner(pet)

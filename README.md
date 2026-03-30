@@ -36,6 +36,35 @@ The scheduler goes beyond a simple priority queue:
 - **Task filtering** — `filter_tasks()` returns a subset of the task list by pet name, completion status, or both, without modifying the original list.
 - **Conflict detection** — `validate()` checks for duplicate tasks (same name and pet) and flags if the total task time exceeds the owner's daily budget, before scheduling runs.
 
+## Advanced Feature — Weighted Prioritization
+
+Instead of sorting tasks into fixed priority tiers, each task is assigned a numeric score
+combining multiple factors. The scheduler ranks tasks by score (highest first) before fitting
+them into the daily budget. This means a short, daily HIGH task will reliably outrank a long,
+non-recurring MEDIUM task even if both share the same priority label.
+
+**Scoring formula:**
+
+| Factor | Condition | Points |
+|---|---|---|
+| Priority weight | HIGH | +100 |
+| Priority weight | MEDIUM | +50 |
+| Priority weight | LOW | +10 |
+| Recurrence bonus | daily | +30 |
+| Recurrence bonus | weekly | +15 |
+| Recurrence bonus | none | +0 |
+| Urgency bonus | weekly task, 10+ days since last scheduled | +20 |
+| Efficiency bonus | duration under 15 min | +10 |
+
+**How Agent Mode was used:** Agent Mode implemented this feature across `pawpal_system.py`,
+`main.py`, and `tests/test_pawpal.py` in a single pass — adding `calculate_score()` to `Task`,
+updating the sort key in `generate_plan()` and `explain_plan()`, printing scores in the demo
+script, and adding a pytest test — without switching files manually between steps.
+
+<a href="Images/demo-adv-1.png" target="_blank">
+  <img src="Images/demo-adv-1.png" alt="Weighted Prioritization Demo" width="700"/>
+</a>
+
 ## Testing PawPal+
 
 ```bash
@@ -55,4 +84,5 @@ preference-based filtering, and UI interaction flows.
 
 <a href="Images/demo.png" target="_blank">
   <img src="Images/demo.png" alt="PawPal+ Demo" width="700"/>
+  <img src="Images/demo-2.png" alt="PawPal+ Demo" width="700"/>
 </a>

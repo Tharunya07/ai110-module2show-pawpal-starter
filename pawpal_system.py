@@ -77,6 +77,27 @@ class Task:
         self.completed = True
         self.last_scheduled = date.today()
 
+    def calculate_score(self) -> int:
+        """Compute a weighted priority score for this task.
+        Combines priority weight, recurrence bonus, urgency bonus for overdue
+        weekly tasks, and an efficiency bonus for short tasks."""
+        priority_weight = {Priority.HIGH: 100, Priority.MEDIUM: 50, Priority.LOW: 10}
+        score = priority_weight[self.priority]
+
+        if self.recurrence == "daily":
+            score += 30
+        elif self.recurrence == "weekly":
+            score += 15
+
+        if self.recurrence == "weekly" and self.last_scheduled is not None:
+            if (date.today() - self.last_scheduled).days >= 10:
+                score += 20
+
+        if self.duration < 15:
+            score += 10
+
+        return score
+
     def is_high_priority(self) -> bool:
         """Return True if this task's priority level is high."""
         return self.priority == Priority.HIGH
@@ -95,14 +116,14 @@ class Scheduler:
             self.task_list.append(task)
 
     def generate_plan(self) -> List[Task]:
-        """Filter due tasks, sort by priority then shortest duration, and greedily fit them
+        """Filter due tasks, sort by weighted score (highest first), and greedily fit them
         into the owner's daily time budget. Sets last_scheduled on each chosen task and
         returns the list of scheduled tasks."""
         today = date.today()
-        priority_order = {Priority.HIGH: 0, Priority.MEDIUM: 1, Priority.LOW: 2}
         sorted_tasks = sorted(
             (t for t in self.owner.get_all_tasks(self.task_list) if t.is_due(today)),
-            key=lambda t: (priority_order[t.priority], t.duration)
+            key=lambda t: t.calculate_score(),
+            reverse=True
         )
 
         time_remaining = self.owner.get_available_time()
@@ -153,9 +174,8 @@ class Scheduler:
 
     def explain_plan(self) -> str:
         """Return a human-readable explanation of the current scheduled_tasks and time usage."""
-        priority_order = {Priority.HIGH: 0, Priority.MEDIUM: 1, Priority.LOW: 2}
         all_tasks = self.owner.get_all_tasks(self.task_list)
-        sorted_tasks = sorted(all_tasks, key=lambda t: priority_order[t.priority])
+        sorted_tasks = sorted(all_tasks, key=lambda t: t.calculate_score(), reverse=True)
         scheduled_set = set(id(t) for t in self.scheduled_tasks)
 
         lines = []
@@ -167,7 +187,7 @@ class Scheduler:
         lines.append("Scheduled:")
         for task in self.scheduled_tasks:
             lines.append(
-                f"  - {task.name} for {task.pet.name} | {task.priority.value} priority | {task.duration} min"
+                f"  - {task.name} for {task.pet.name} | {task.priority.value} priority | {task.duration} min | score {task.calculate_score()}"
             )
 
         skipped = [t for t in sorted_tasks if id(t) not in scheduled_set]
@@ -175,7 +195,7 @@ class Scheduler:
             lines.append("\nSkipped (time ran out):")
             for task in skipped:
                 lines.append(
-                    f"  - {task.name} for {task.pet.name} | {task.priority.value} priority | {task.duration} min needed"
+                    f"  - {task.name} for {task.pet.name} | {task.priority.value} priority | {task.duration} min needed | score {task.calculate_score()}"
                 )
 
         return "\n".join(lines)
